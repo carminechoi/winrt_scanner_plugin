@@ -6,26 +6,32 @@
 
 #include <memory>
 
-namespace winrt_scanner_plugin {
+namespace winrt_scanner_plugin
+{
 
-class WinrtScannerPlugin : public flutter::Plugin {
- public:
-  static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
+    class WinrtScannerPlugin : public flutter::Plugin
+    {
+    public:
+        static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
 
-  WinrtScannerPlugin();
+        WinrtScannerPlugin();
 
-  virtual ~WinrtScannerPlugin();
+        virtual ~WinrtScannerPlugin();
 
-  // Disallow copy and assign.
-  WinrtScannerPlugin(const WinrtScannerPlugin&) = delete;
-  WinrtScannerPlugin& operator=(const WinrtScannerPlugin&) = delete;
+        // Disallow copy and assign.
+        WinrtScannerPlugin(const WinrtScannerPlugin &) = delete;
+        WinrtScannerPlugin &operator=(const WinrtScannerPlugin &) = delete;
 
-  // Called when a method is called on this plugin's channel from Dart.
-  void HandleMethodCall(
-      const flutter::MethodCall<flutter::EncodableValue> &method_call,
-      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
-};
+        // Called when a method is called on this plugin's channel from Dart.
+        void HandleMethodCall(
+            const flutter::MethodCall<flutter::EncodableValue> &method_call,
+            std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
-}  // namespace winrt_scanner_plugin
+    private:
+        void GetPlatformVersion(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+        // void StartScan(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+    };
 
-#endif  // FLUTTER_PLUGIN_WINRT_SCANNER_PLUGIN_H_
+} // namespace winrt_scanner_plugin
+
+#endif // FLUTTER_PLUGIN_WINRT_SCANNER_PLUGIN_H_
