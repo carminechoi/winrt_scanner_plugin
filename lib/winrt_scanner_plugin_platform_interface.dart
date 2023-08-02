@@ -8,7 +8,8 @@ abstract class WinrtScannerPluginPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static WinrtScannerPluginPlatform _instance = MethodChannelWinrtScannerPlugin();
+  static WinrtScannerPluginPlatform _instance =
+      MethodChannelWinrtScannerPlugin();
 
   /// The default instance of [WinrtScannerPluginPlatform] to use.
   ///
@@ -25,5 +26,9 @@ abstract class WinrtScannerPluginPlatform extends PlatformInterface {
 
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');
+  }
+
+  Future<String?> startScan() {
+    throw UnimplementedError('startScan() has not been implemented.');
   }
 }

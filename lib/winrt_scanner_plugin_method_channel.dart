@@ -11,7 +11,14 @@ class MethodChannelWinrtScannerPlugin extends WinrtScannerPluginPlatform {
 
   @override
   Future<String?> getPlatformVersion() async {
-    final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
+    final version =
+        await methodChannel.invokeMethod<String>('getPlatformVersion');
+    return version;
+  }
+
+  @override
+  Future<String?> startScan() async {
+    final version = await methodChannel.invokeMethod<String>('startScan');
     return version;
   }
 }

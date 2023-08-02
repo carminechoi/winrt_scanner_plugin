@@ -4,11 +4,14 @@
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 
+#include <windows.h>
 #include <memory>
+#include <winrt/windows.foundation.h>
+
+using namespace winrt;
 
 namespace winrt_scanner_plugin
 {
-
     class WinrtScannerPlugin : public flutter::Plugin
     {
     public:
@@ -29,7 +32,7 @@ namespace winrt_scanner_plugin
 
     private:
         void GetPlatformVersion(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
-        // void StartScan(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+        winrt::fire_and_forget StartScan(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
     };
 
 } // namespace winrt_scanner_plugin
