@@ -32,6 +32,8 @@ namespace winrt_scanner_plugin
 
     private:
         void GetPlatformVersion(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+
+        fire_and_forget GetScanners(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
         winrt::fire_and_forget StartScan(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
     };
 

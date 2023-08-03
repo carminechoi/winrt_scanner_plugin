@@ -28,6 +28,10 @@ abstract class WinrtScannerPluginPlatform extends PlatformInterface {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 
+  Future<List?> getScanners() {
+    throw UnimplementedError('getScanners() has not been implemented.');
+  }
+
   Future<String?> startScan() {
     throw UnimplementedError('startScan() has not been implemented.');
   }

@@ -60,6 +60,10 @@ namespace winrt_scanner_plugin
     {
       GetPlatformVersion(std::move(result));
     }
+    else if (method_call.method_name().compare("getScanners") == 0)
+    {
+      GetScanners(std::move(result));
+    }
     else if (method_call.method_name().compare("startScan") == 0)
     {
       StartScan(std::move(result));
@@ -87,6 +91,36 @@ namespace winrt_scanner_plugin
       version_stream << "7";
     }
     result->Success(flutter::EncodableValue(version_stream.str()));
+  }
+
+  fire_and_forget WinrtScannerPlugin::GetScanners(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
+  {
+    try
+    {
+      // Get all scanners from WinRT
+      DeviceInformationCollection scanners = co_await DeviceInformation::FindAllAsync(DeviceClass::ImageScanner);
+
+      flutter::EncodableList scannerList;
+
+      for (const auto &scanner : scanners)
+      {
+        // Create a map for each scanner and populate it with relevant information
+        flutter::EncodableMap scannerInfo;
+        scannerInfo[flutter::EncodableValue("id")] = flutter::EncodableValue(to_string(scanner.Id()));
+        scannerInfo[flutter::EncodableValue("name")] = flutter::EncodableValue(to_string(scanner.Name()));
+        scannerInfo[flutter::EncodableValue("isEnabled")] = flutter::EncodableValue(scanner.IsEnabled());
+
+        // Add the scanner map to the vector
+        scannerList.push_back(scannerInfo);
+      }
+
+      // Return the scanner list as the result
+      result->Success(scannerList);
+    }
+    catch (hresult_error const &ex)
+    {
+      result->Error("SCANNER_ERROR", to_string(ex.message()));
+    }
   }
 
   fire_and_forget WinrtScannerPlugin::StartScan(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)

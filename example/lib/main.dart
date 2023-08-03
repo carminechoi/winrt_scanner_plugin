@@ -60,7 +60,7 @@ class _MyAppState extends State<MyApp> {
             Text('Running on: $_platformVersion\n'),
             TextButton(
                 onPressed: () {
-                  _winrtScannerPlugin.startScan();
+                  _winrtScannerPlugin.getScanners();
                 },
                 child: const Text("Test Scan"))
           ],

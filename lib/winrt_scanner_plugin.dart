@@ -5,6 +5,10 @@ class WinrtScannerPlugin {
     return WinrtScannerPluginPlatform.instance.getPlatformVersion();
   }
 
+  Future<List?> getScanners() {
+    return WinrtScannerPluginPlatform.instance.getScanners();
+  }
+
   Future<String?> startScan() {
     return WinrtScannerPluginPlatform.instance.startScan();
   }
