@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'winrt_scanner_plugin_method_channel.dart';
@@ -32,7 +34,8 @@ abstract class WinrtScannerPluginPlatform extends PlatformInterface {
     throw UnimplementedError('getScanners() has not been implemented.');
   }
 
-  Future<String?> startScan() {
+  Future<List?> startScan(String deviceId, String source, String colorMode,
+      bool isDuplex, String directory) {
     throw UnimplementedError('startScan() has not been implemented.');
   }
 }

@@ -24,8 +24,9 @@ class MethodChannelWinrtScannerPlugin extends WinrtScannerPluginPlatform {
   }
 
   @override
-  Future<String?> startScan() async {
-    final version = await methodChannel.invokeMethod<String>('startScan');
+  Future<List?> startScan(
+      deviceId, source, colorMode, isDuplex, directory) async {
+    final version = await methodChannel.invokeMethod<List>('startScan');
     return version;
   }
 }

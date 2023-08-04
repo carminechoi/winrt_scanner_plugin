@@ -11,7 +11,7 @@ class MockWinrtScannerPluginPlatform
   Future<String?> getPlatformVersion() => Future.value('42');
 
   @override
-  Future<String?> startScan() {
+  Future<List?> startScan(deviceId, source, colorMode, isDuplex, directory) {
     // TODO: implement startScan
     throw UnimplementedError();
   }
