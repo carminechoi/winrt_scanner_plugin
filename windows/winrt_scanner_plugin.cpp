@@ -69,9 +69,9 @@ namespace winrt_scanner_plugin
       auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
       auto deviceId = std::get<std::string>(args[flutter::EncodableValue("deviceId")]);
       auto source = std::get<std::string>(args[flutter::EncodableValue("source")]);
-      auto directory = std::get<std::string>(args[flutter::EncodableValue("directory")]);
       auto colorMode = std::get<std::string>(args[flutter::EncodableValue("colorMode")]);
       auto isDuplex = std::get<bool>(args[flutter::EncodableValue("isDuplex")]);
+      auto directory = std::get<std::string>(args[flutter::EncodableValue("directory")]);
 
       StartScan(deviceId, source, colorMode, isDuplex, directory, std::move(result));
     }
