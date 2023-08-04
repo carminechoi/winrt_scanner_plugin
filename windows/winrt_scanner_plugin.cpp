@@ -66,7 +66,14 @@ namespace winrt_scanner_plugin
     }
     else if (method_call.method_name().compare("startScan") == 0)
     {
-      StartScan(std::move(result));
+      auto args = std::get<flutter::EncodableMap>(*method_call.arguments());
+      auto deviceId = std::get<std::string>(args[flutter::EncodableValue("deviceId")]);
+      auto source = std::get<std::string>(args[flutter::EncodableValue("source")]);
+      auto directory = std::get<std::string>(args[flutter::EncodableValue("directory")]);
+      auto colorMode = std::get<std::string>(args[flutter::EncodableValue("colorMode")]);
+      auto isDuplex = std::get<bool>(args[flutter::EncodableValue("isDuplex")]);
+
+      StartScan(deviceId, source, colorMode, isDuplex, directory, std::move(result));
     }
     else
     {
@@ -97,20 +104,52 @@ namespace winrt_scanner_plugin
   {
     try
     {
-      // Get all scanners from WinRT
+      // Get all scanner devices with WinRT
       DeviceInformationCollection scanners = co_await DeviceInformation::FindAllAsync(DeviceClass::ImageScanner);
 
       flutter::EncodableList scannerList;
 
       for (const auto &scanner : scanners)
       {
-        // Create a map for each scanner and populate it with relevant information
+        // Create a map for each scanner and populate it with the scanner's info
         flutter::EncodableMap scannerInfo;
-        scannerInfo[flutter::EncodableValue("id")] = flutter::EncodableValue(to_string(scanner.Id()));
-        scannerInfo[flutter::EncodableValue("name")] = flutter::EncodableValue(to_string(scanner.Name()));
+        scannerInfo[flutter::EncodableValue("deviceId")] = flutter::EncodableValue(to_string(scanner.Id()));
+        scannerInfo[flutter::EncodableValue("deviceName")] = flutter::EncodableValue(to_string(scanner.Name()));
         scannerInfo[flutter::EncodableValue("isEnabled")] = flutter::EncodableValue(scanner.IsEnabled());
 
-        // Add the scanner map to the vector
+        // Get the ImageScanner for this device
+        ImageScanner imageScanner = co_await ImageScanner::FromIdAsync(scanner.Id());
+        if (imageScanner)
+        {
+          flutter::EncodableMap flatbed;
+          flutter::EncodableMap feeder;
+
+          // Check if the flatbed is supported
+          flatbed[flutter::EncodableValue("isSupported")] = flutter::EncodableValue(imageScanner.IsScanSourceSupported(ImageScannerScanSource::Flatbed));
+
+          // Check if the feeder is supported
+          feeder[flutter::EncodableValue("isSupported")] = flutter::EncodableValue(imageScanner.IsScanSourceSupported(ImageScannerScanSource::Feeder));
+
+          // Check if flatbed color, monochrome, and grayscale are supported
+          ImageScannerFlatbedConfiguration flatbedConfiguration = imageScanner.FlatbedConfiguration();
+          flatbed[flutter::EncodableValue("isColorSupported")] = flutter::EncodableValue(flatbedConfiguration.IsColorModeSupported(ImageScannerColorMode::Color));
+          flatbed[flutter::EncodableValue("isMonoChromeSupported")] = flutter::EncodableValue(flatbedConfiguration.IsColorModeSupported(ImageScannerColorMode::Monochrome));
+          flatbed[flutter::EncodableValue("isGrayscaleSupported")] = flutter::EncodableValue(flatbedConfiguration.IsColorModeSupported(ImageScannerColorMode::Grayscale));
+
+          // Check if feeder color, monochrome, and grayscale are supported
+          ImageScannerFeederConfiguration feederConfiguration = imageScanner.FeederConfiguration();
+          feeder[flutter::EncodableValue("isColorSupported")] = flutter::EncodableValue(feederConfiguration.IsColorModeSupported(ImageScannerColorMode::Color));
+          feeder[flutter::EncodableValue("isMonoChromeSupported")] = flutter::EncodableValue(feederConfiguration.IsColorModeSupported(ImageScannerColorMode::Monochrome));
+          feeder[flutter::EncodableValue("isGrayscaleSupported")] = flutter::EncodableValue(feederConfiguration.IsColorModeSupported(ImageScannerColorMode::Grayscale));
+
+          // Check if feeder duplex is supported
+          feeder[flutter::EncodableValue("isDuplexSupported")] = flutter::EncodableValue(feederConfiguration.CanScanDuplex());
+
+          scannerInfo[flutter::EncodableValue("flatbed")] = flatbed;
+          scannerInfo[flutter::EncodableValue("feeder")] = feeder;
+        }
+
+        // Add the completed scanner map to the list
         scannerList.push_back(scannerInfo);
       }
 
@@ -123,41 +162,74 @@ namespace winrt_scanner_plugin
     }
   }
 
-  fire_and_forget WinrtScannerPlugin::StartScan(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
+  fire_and_forget WinrtScannerPlugin::StartScan(std::string deviceId, std::string source, std::string colorMode, bool isDuplex, std::string directory, std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
   {
     try
     {
-
       // Initialize scanners
-      DeviceInformationCollection scanners = co_await DeviceInformation::FindAllAsync(DeviceClass::ImageScanner);
+      ImageScanner imageScanner = co_await ImageScanner::FromIdAsync(to_hstring(deviceId));
 
-      if (scanners.Size() == 0)
+      // Declare scanner source and format configuration
+      IImageScannerSourceConfiguration sourceConfig;
+      IImageScannerFormatConfiguration formatConfig;
+      ImageScannerScanSource sourceEnum = ImageScannerScanSource::Default;
+
+      // Set scanner configuration variables
+      if (source == "Flatbed")
       {
-        result->Error("NO_SCANNER", "No scanners found.");
-        co_return;
+        sourceConfig = imageScanner.FlatbedConfiguration();
+        formatConfig = imageScanner.FlatbedConfiguration();
+        sourceEnum = ImageScannerScanSource::Flatbed;
+      }
+      else
+      {
+        sourceConfig = imageScanner.FeederConfiguration();
+        formatConfig = imageScanner.FeederConfiguration();
+        sourceEnum = ImageScannerScanSource::Feeder;
+
+        // Set to Zero to scan all pages in feeder
+        imageScanner.FeederConfiguration().MaxNumberOfPages(0);
+
+        // Configure duplex
+        imageScanner.FeederConfiguration().Duplex(isDuplex);
       }
 
-      // Assuming we use the first scanner found; you can customize this based on your requirements
-      ImageScanner scanner = co_await ImageScanner::FromIdAsync(scanners.GetAt(0).Id());
-
-      if (!scanner)
+      // Configure color mode
+      if (colorMode == "Color")
       {
-        result->Error("SCANNER_NOT_AVAILABLE", "Scanner not available.");
-        co_return;
+        sourceConfig.ColorMode(ImageScannerColorMode::Color);
+      }
+      else if (colorMode == "Monochrome")
+      {
+        sourceConfig.ColorMode(ImageScannerColorMode::Monochrome);
+      }
+      else if (colorMode == "Grayscale")
+      {
+        sourceConfig.ColorMode(ImageScannerColorMode::Grayscale);
+      }
+      else
+      {
+        sourceConfig.ColorMode(ImageScannerColorMode::AutoColor);
       }
 
-      // Perform the scanning operation
-      auto scanStream = co_await scanner.ScanFilesToFolderAsync(
-          ImageScannerScanSource::AutoConfigured,
-          KnownFolders::PicturesLibrary());
+      StorageFolder storageFolder = co_await StorageFolder::GetFolderFromPathAsync(to_hstring(directory));
 
-      // You can do further processing here, e.g., extracting the scanned image file path or scanned text.
+      // Scan images
+      ImageScannerScanResult scanResult = co_await imageScanner.ScanFilesToFolderAsync(sourceEnum, storageFolder);
+      Collections::IVectorView<StorageFile> scanResults = scanResult.ScannedFiles();
 
-      result->Success(flutter::EncodableValue("Scanning completed successfully."));
+      // Create list of file paths from scanned images
+      flutter::EncodableList paths;
+
+      for (StorageFile path : scanResults)
+      {
+        paths.push_back(flutter::EncodableValue(to_string(path.Path())));
+      }
+      result->Success(paths);
     }
-    catch (winrt::hresult_error const &ex)
+    catch (hresult_error const &ex)
     {
-      result->Error("SCANNING_ERROR", winrt::to_string(ex.message()));
+      result->Error("SCANNING_ERROR", to_string(ex.message()));
     }
   }
 

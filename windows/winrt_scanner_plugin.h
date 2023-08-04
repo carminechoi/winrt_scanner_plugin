@@ -34,7 +34,7 @@ namespace winrt_scanner_plugin
         void GetPlatformVersion(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
         fire_and_forget GetScanners(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
-        winrt::fire_and_forget StartScan(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+        fire_and_forget StartScan(std::string device_id, std::string source, std::string colorMode, bool isDuplex, std::string directory, std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
     };
 
 } // namespace winrt_scanner_plugin
