@@ -42,8 +42,9 @@ class _MyAppState extends State<MyApp> {
 
     try {
       scanners = await _winrtScannerPlugin.getScanners() ?? [];
-    } catch (e) {
+    } on PlatformException {
       scanners = [];
+      print("Failed to start scan.");
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -69,8 +70,9 @@ class _MyAppState extends State<MyApp> {
           children: [
             Text('Running on: $_platformVersion\n'),
             TextButton(
-              onPressed: () {
-                _winrtScannerPlugin.getScanners();
+              onPressed: () async {
+                print(await _winrtScannerPlugin.getScanners());
+                return;
               },
               child: const Text("Test getScanners"),
             ),
@@ -90,6 +92,7 @@ class _MyAppState extends State<MyApp> {
                   directory.path,
                 );
                 print(scannedFiles);
+                return;
               },
               child: const Text("Test startScan"),
             )
